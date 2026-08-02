@@ -104,4 +104,15 @@ echo "exit code: $?"   # 2 なら遮断されている
 Codex公式仕様上は `allow_implicit_invocation: false` が暗黙起動を禁止するが、
 本リポジトリはCIでも同ポリシーの存在を検証する。
 
-Claude CodeとAntigravityは、対応設定を同梱しているが実機検証済みとは扱わない。
+### Claude Code 2.1.176 / Windows（2026-08-02）
+
+隔離した一時プロファイルで、Git marketplace登録、プラグイン導入、3スキルの認識、
+一覧・詳細表示、アンインストール、marketplace削除まで確認済み。
+`incident-containment` と `incident-cleanup` には
+`disable-model-invocation: true` を生成時に付与する。
+
+### Antigravity CLI 1.1.5 / Windows（2026-08-02）
+
+隔離した一時プロファイルで、専用パッケージの検証、3スキルの導入、一覧表示、
+アンインストールまで確認済み。自動起動禁止メタデータの強制動作をモデルセッションで
+確認したわけではないため、表の「要確認」は維持する。

@@ -1,0 +1,53 @@
+{
+  "plan": {
+    "schema_version": 1,
+    "target_id": "server-01",
+    "level": 2,
+    "execution_layer": "host-iptables",
+    "preserve_cidrs_v4": ["203.0.113.10/32", "100.64.12.34/32"],
+    "preserve_cidrs_v6": [],
+    "preserve_interfaces": ["tailscale0"],
+    "ssh_port": 2222,
+    "evidence_snapshot_id": "ir-evidence.server-01.20260802_120000.AbCdEf",
+    "evidence_snapshot_time": "2026-08-02T12:00:00Z",
+    "created_at": "2026-08-02T12:01:00Z",
+    "expires_at": "2099-01-01T00:00:00Z",
+    "execution_bundle_sha256": null,
+    "rollback_bundle_sha256": null,
+    "rules": [
+      { "family":"ipv4","hook":"INPUT","chain":"IR_CONTAINMENT_IN",
+        "protocol":null,"conntrack_states":["ESTABLISHED","RELATED"],
+        "action":"RETURN","comment":"keep existing connections" },
+      { "family":"ipv4","hook":"INPUT","chain":"IR_CONTAINMENT_IN",
+        "interface_in":"lo","action":"RETURN","comment":"loopback" },
+      { "family":"ipv4","hook":"INPUT","chain":"IR_CONTAINMENT_IN",
+        "protocol":"tcp","source":"203.0.113.10/32","destination_port":2222,
+        "conntrack_states":["NEW"],"action":"RETURN","comment":"admin ssh" },
+      { "family":"ipv4","hook":"INPUT","chain":"IR_CONTAINMENT_IN",
+        "action":"DROP","comment":"deny rest inbound" },
+      { "family":"ipv4","hook":"OUTPUT","chain":"IR_CONTAINMENT_OUT",
+        "conntrack_states":["ESTABLISHED","RELATED"],"action":"RETURN" },
+      { "family":"ipv4","hook":"OUTPUT","chain":"IR_CONTAINMENT_OUT",
+        "protocol":"udp","destination_port":41641,"action":"RETURN","comment":"tailscale direct" },
+      { "family":"ipv4","hook":"OUTPUT","chain":"IR_CONTAINMENT_OUT",
+        "protocol":"tcp","destination_port":443,"action":"RETURN","comment":"tailscale DERP" },
+      { "family":"ipv4","hook":"OUTPUT","chain":"IR_CONTAINMENT_OUT",
+        "protocol":"udp","destination_port":3478,"action":"RETURN","comment":"tailscale STUN" },
+      { "family":"ipv4","hook":"OUTPUT","chain":"IR_CONTAINMENT_OUT",
+        "protocol":"udp","destination_port":53,"action":"RETURN","comment":"dns" },
+      { "family":"ipv4","hook":"OUTPUT","chain":"IR_CONTAINMENT_OUT",
+        "protocol":"udp","destination_port":123,"action":"RETURN","comment":"ntp" },
+      { "family":"ipv4","hook":"OUTPUT","chain":"IR_CONTAINMENT_OUT",
+        "action":"DROP","comment":"deny rest outbound" },
+      { "family":"ipv4","hook":"FORWARD","chain":"IR_CONTAINMENT_FWD",
+        "conntrack_states":["ESTABLISHED","RELATED"],"action":"RETURN" },
+      { "family":"ipv4","hook":"FORWARD","chain":"IR_CONTAINMENT_FWD",
+        "action":"DROP","comment":"deny container forwarding" }
+    ]
+  },
+  "lifecycle": {
+    "status": "proposed",
+    "approved_at": null,
+    "executed_at": null
+  }
+}

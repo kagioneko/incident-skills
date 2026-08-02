@@ -121,6 +121,27 @@ jobs:
           assert entry['policy']['installation'] == 'AVAILABLE'
           print('plugin and marketplace manifests verified')
           PY
+
+      - name: Claude and Antigravity adapter manifests
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          root = json.loads(pathlib.Path('.claude-plugin/marketplace.json').read_text())
+          plugin = json.loads(pathlib.Path('plugins/incident-skills-claude/.claude-plugin/plugin.json').read_text())
+          agy = json.loads(pathlib.Path('plugins/incident-skills-claude/plugin.json').read_text())
+          entry = next(p for p in root['plugins'] if p['name'] == 'incident-skills')
+          assert entry['source'] == './plugins/incident-skills-claude'
+          assert plugin['name'] == agy['name'] == 'incident-skills'
+          assert plugin['version'] == agy['version'] == entry['version']
+          assert plugin['skills'] == agy['skills'] == ['./skills/']
+          print('Claude and Antigravity manifests verified')
+          PY
+
+      - name: Generated adapter is in sync
+        run: |
+          out="$(mktemp -d)/incident-skills-claude"
+          INCIDENT_SKILLS_VERSION=0.1.0-beta.2 bash scripts/build_claude_plugin.sh "$out"
+          diff -ru plugins/incident-skills-claude "$out"
       # -------------------------------------------------
       - name: Executable bits
         run: |

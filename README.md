@@ -1,11 +1,12 @@
 # incident-response skills
 
-> **公開状態**: v0.1.0-beta.1 — 技術者向け公開β。本番適用前に使い捨て環境で検証すること。
+> **公開状態**: v0.1.0-beta.2 — 技術者向け公開β。本番適用前に使い捨て環境で検証すること。
 >
 > **Codex CLI 0.146.0で検証済み**: GitHub marketplace登録 → プラグイン導入 →
 > 3スキル展開 → 危険スキルの暗黙起動禁止ポリシー確認 → アンインストールまで実測。
 > GitHub Actionsでも構文、ShellCheck、Plan改ざん、削除承認、証拠収集、秘密情報非収集を検証する。
-> Claude Code / Antigravityは対応設定を同梱するが、実機検証済みではない。
+> **Claude Code 2.1.176 / Antigravity CLI 1.1.5でも検証済み**: 隔離プロファイルで
+> 3スキルの導入・一覧・削除を実測。危険スキルは自動起動禁止メタデータ付き。
 
 AIエージェント（Claude Code / Antigravity 等）向けの、サーバー侵害対応スキル一式。
 
@@ -155,7 +156,7 @@ evidence/
 1. Codexではプラグインmarketplaceから導入する（推奨）
 
 ```bash
-codex plugin marketplace add kagioneko/incident-skills --ref v0.1.0-beta.1
+codex plugin marketplace add kagioneko/incident-skills --ref v0.1.0-beta.2
 codex plugin add incident-skills@incident-skills
 ```
 
@@ -163,23 +164,23 @@ Codexでは `agents/openai.yaml` により、`incident-containment` と
 `incident-cleanup` の暗黙起動を禁止する。明示的な `$incident-containment` / `$incident-cleanup`
 呼び出しは可能。
 
-2. Claude Codeまたは単体スキル配置では、まずdry-runを確認する
+2. Claude Codeでは公式marketplace経由で導入する
 
 ```bash
-./install.sh --runtime claude-code
-./install.sh --runtime claude-code --apply
-./doctor.sh --runtime claude-code
+claude plugin marketplace add https://github.com/kagioneko/incident-skills.git#v0.1.0-beta.2
+claude plugin install incident-skills@incident-skills
 ```
 
-Antigravityは配置先と自動起動禁止機能が未検証のため、絶対パスを明示し、
-既定では `incident-response` のみを配置する。
+Antigravityではリポジトリを取得し、専用パッケージを導入する。
 
 ```bash
-./install.sh --runtime antigravity --target /absolute/path
-./install.sh --runtime antigravity --target /absolute/path --apply
+git clone --branch v0.1.0-beta.2 https://github.com/kagioneko/incident-skills.git
+agy plugin install /absolute/path/incident-skills/plugins/incident-skills-claude
 ```
 
-アンインストールは `uninstall.sh --target /absolute/path` のdry-run後、`--apply`で行う。
+Claude Code / Antigravityとも、導入後に3スキルが表示されることを確認する。
+Antigravity 1.1.5では自動起動禁止メタデータの強制動作までは未確認なので、
+原証拠は読み取り専用かエージェントから見えない場所に置く。
 
 3. `doctor.sh` のFAILを解消し、WARNINGと未検証範囲を確認する
 4. `hardening.md` の設定を入れる（**これが本体。SKILL.md だけでは守れない**）

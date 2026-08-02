@@ -2,7 +2,7 @@
   "skills": "./skills/",
   "name": "incident-skills",
   "description": "Incident response, containment, and cleanup workflows with explicit safety boundaries.",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0-beta.2",
   "interface": {
     "displayName": "Incident Skills",
     "shortDescription": "Evidence-first incident response workflows for AI agents.",

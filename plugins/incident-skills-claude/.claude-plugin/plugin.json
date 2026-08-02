@@ -1,0 +1,8 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "incident-skills",
+  "version": "0.1.0-beta.2",
+  "description": "Incident response, containment, and cleanup workflows with explicit safety boundaries.",
+  "author": { "name": "kagioneko" },
+  "skills": ["./skills/"]
+}
