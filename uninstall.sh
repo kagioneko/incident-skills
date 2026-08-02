@@ -22,5 +22,5 @@ for skill in $skills; do
   printf 'PLAN remove %s\n' "$dst"
 done
 [ "$MODE" = apply ] || { echo 'DRY-RUN complete; no files changed.'; exit 0; }
-for skill in $skills; do rm -rf -- "$TARGET/$skill"; done
+for skill in $skills; do rm -rf -- "${TARGET:?}/$skill"; done
 rm -f -- "$MANIFEST"; echo 'Uninstalled manifest-managed incident skills.'

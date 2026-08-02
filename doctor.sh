@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -uo pipefail
-ROOT="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 RUNTIME=auto; TARGET=""; FAIL=0; WARN=0
 ok() { printf 'OK      %s\n' "$*"; }
 warn() { printf 'WARNING %s\n' "$*"; WARN=$((WARN + 1)); }
