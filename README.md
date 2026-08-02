@@ -1,6 +1,11 @@
 # incident-response skills
 
 > **公開状態**: v0.1.0-beta.1 — 技術者向け公開β。本番適用前に使い捨て環境で検証すること。
+>
+> **Codex CLI 0.146.0で検証済み**: GitHub marketplace登録 → プラグイン導入 →
+> 3スキル展開 → 危険スキルの暗黙起動禁止ポリシー確認 → アンインストールまで実測。
+> GitHub Actionsでも構文、ShellCheck、Plan改ざん、削除承認、証拠収集、秘密情報非収集を検証する。
+> Claude Code / Antigravityは対応設定を同梱するが、実機検証済みではない。
 
 AIエージェント（Claude Code / Antigravity 等）向けの、サーバー侵害対応スキル一式。
 
@@ -150,7 +155,7 @@ evidence/
 1. Codexではプラグインmarketplaceから導入する（推奨）
 
 ```bash
-codex plugin marketplace add kagioneko/incident-skills --ref main
+codex plugin marketplace add kagioneko/incident-skills --ref v0.1.0-beta.1
 codex plugin add incident-skills@incident-skills
 ```
 
