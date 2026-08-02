@@ -3,14 +3,13 @@ name: incident-cleanup
 description: >
   分析が完了した作業コピーから、ユーザーが承認した不要ファイルを削除し、
   削除操作を監査ログに記録する。原証拠は常に対象外。
-disable-model-invocation: true
 ---
 
 # インシデント後クリーンアップ（削除）
 
 > [!CAUTION]
 > **このスキルはモデルから自動的に呼び出されない。**
-> `disable-model-invocation: true` により、ユーザーが明示的に指定した場合のみ起動する。
+> Codexでは `agents/openai.yaml`、Claude Codeではインストール時のfrontmatterにより、ユーザーが明示した場合のみ起動する。
 >
 > これは意図的な設計である。削除は副作用のある不可逆操作であり、
 > 「クリーンアップして」「危険なファイル消して」といった依頼から

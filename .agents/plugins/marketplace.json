@@ -1,0 +1,20 @@
+{
+  "name": "incident-skills",
+  "interface": {
+    "displayName": "Incident Skills"
+  },
+  "plugins": [
+    {
+      "name": "incident-skills",
+      "source": {
+        "source": "local",
+        "path": "./plugins/incident-skills"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

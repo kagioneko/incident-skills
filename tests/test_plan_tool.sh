@@ -2,9 +2,9 @@
 # plan_tool.sh の自己テスト
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
-P="incident-containment/scripts/plan_tool.sh"
+P="plugins/incident-skills/skills/incident-containment/scripts/plan_tool.sh"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
-cp incident-containment/templates/plan.example.json "$TMP/plan.json"
+cp plugins/incident-skills/skills/incident-containment/templates/plan.example.json "$TMP/plan.json"
 cd "$TMP" || exit 1
 echo "iptables -A IR_CONTAINMENT_IN -j DROP" > apply.sh
 echo "iptables -X IR_CONTAINMENT_IN"        > rollback.sh

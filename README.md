@@ -1,5 +1,7 @@
 # incident-response skills
 
+> **公開状態**: v0.1.0-beta.1 — 技術者向け公開β。本番適用前に使い捨て環境で検証すること。
+
 AIエージェント（Claude Code / Antigravity 等）向けの、サーバー侵害対応スキル一式。
 
 実際のVPS侵害インシデントと、**その調査中にAIエージェントが証拠ファイルを削除した事故**
@@ -41,7 +43,7 @@ incident-cleanup       分析後に不要物を消す     （手動起動のみ�
 ## 構成
 
 ```
-incident-response/
+plugins/incident-skills/skills/incident-response/
 ├── SKILL.md                          保全・分析。原証拠を変更しない
 ├── scripts/
 │   ├── collect_evidence.sh           証拠収集（quick/full・揮発性順・ギャップ記録）
@@ -55,14 +57,14 @@ incident-response/
     ├── forensic_report.md            確度4段階・3範囲併記の報告書
     └── credential_rotation.md        失効/再発行/再配備の3段階チェック
 
-incident-containment/
+plugins/incident-skills/skills/incident-containment/
 ├── SKILL.md                          隔離・遮断・失効。Plan ID 承認必須
 ├── scripts/
 │   └── plan_tool.sh                  Plan ID の生成・封印・検証、ルール生成
 └── templates/
     └── plan.example.json             ルール粒度の記載例
 
-incident-cleanup/
+plugins/incident-skills/skills/incident-cleanup/
 ├── SKILL.md                          削除。DELETE-CONFIRM 必須
 ├── scripts/
 │   └── verify_delete_confirm.sh      承認テキストの機械検証
@@ -145,35 +147,44 @@ evidence/
 
 ### 平時
 
-1. まず dry-run で配置計画を確認する
+1. Codexではプラグインmarketplaceから導入する（推奨）
 
 ```bash
-./install.sh
-./install.sh --runtime codex
-./install.sh --runtime codex --apply
+codex plugin marketplace add kagioneko/incident-skills --ref main
+codex plugin add incident-skills@incident-skills
 ```
 
-Codex / Antigravity のように自動起動禁止の強制力が未検証のランタイムでは、
-既定で `incident-response` のみを配置する。封じ込め・削除スキルも配置する場合は、
-リスクを確認して `--include-privileged` を明示する。
+Codexでは `agents/openai.yaml` により、`incident-containment` と
+`incident-cleanup` の暗黙起動を禁止する。明示的な `$incident-containment` / `$incident-cleanup`
+呼び出しは可能。
+
+2. Claude Codeまたは単体スキル配置では、まずdry-runを確認する
 
 ```bash
-./install.sh --runtime codex --include-privileged --apply
-./doctor.sh --runtime codex
+./install.sh --runtime claude-code
+./install.sh --runtime claude-code --apply
+./doctor.sh --runtime claude-code
 ```
 
-Antigravity は既定のスキルディレクトリを断定しない。`--target /absolute/path` を指定する。
-アンインストールは `uninstall.sh --target /absolute/path` の dry-run 後、`--apply` で行う。
+Antigravityは配置先と自動起動禁止機能が未検証のため、絶対パスを明示し、
+既定では `incident-response` のみを配置する。
 
-2. `doctor.sh` の FAIL を解消し、WARNING と未検証範囲を確認する
-3. `hardening.md` の設定を入れる（**これが本体。SKILL.md だけでは守れない**）
-4. 収集キットの正本を手元に置く
-5. **使い捨て環境で演習する**（`scripts/rehearse_containment.sh`）
+```bash
+./install.sh --runtime antigravity --target /absolute/path
+./install.sh --runtime antigravity --target /absolute/path --apply
+```
+
+アンインストールは `uninstall.sh --target /absolute/path` のdry-run後、`--apply`で行う。
+
+3. `doctor.sh` のFAILを解消し、WARNINGと未検証範囲を確認する
+4. `hardening.md` の設定を入れる（**これが本体。SKILL.md だけでは守れない**）
+5. 収集キットの正本を手元に置く
+6. **使い捨て環境で演習する**（`scripts/rehearse_containment.sh`）
    ※ 本番が初回実行になってはいけない。実際、このスキルの iptables コードは
      査読3周・構文チェック済みで、初回実行時に実行者を締め出した
-6. sshd の `LogLevel VERBOSE` を設定する
+7. sshd の `LogLevel VERBOSE` を設定する
    ※ 侵害後に設定しても、過去の接続については何も分からない
-7. `/var/log/journal` が存在するか確認する
+8. `/var/log/journal` が存在するか確認する
    ※ 無ければ journald は揮発設定。再起動でログが消える
 
 ### 有事

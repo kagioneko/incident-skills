@@ -93,7 +93,7 @@ TRUSTED_V4="203.0.113.10/32"  # あなたの接続元（curl -4 ifconfig.me）
 ## 5. `DELETE-CONFIRM` と書いてあったが、実装されていなかった
 
 README には「絶対パス＋確認トークン」「DELETE-CONFIRM 必須」と書いてあった。
-`incident-cleanup/SKILL.md` に、その規則が**存在しなかった。**
+`plugins/incident-skills/skills/incident-cleanup/SKILL.md` に、その規則が**存在しなかった。**
 
 ドキュメントと実装が矛盾したまま、査読を通過していた。
 
@@ -123,7 +123,7 @@ README には「絶対パス＋確認トークン」「DELETE-CONFIRM 必須」�
 
 ## 7. 片方のレイヤーだけ直して、隣を確認しなかった（複数回）
 
-- `incident-containment/SKILL.md` の ufw を専用チェーン方式に書き換えたが、
+- `plugins/incident-skills/skills/incident-containment/SKILL.md` の ufw を専用チェーン方式に書き換えたが、
   **同じ内容を書いていた `containment_matrix.md` を直し忘れた**
 - 記事側で確度表現を「支持されない」に統一したが、**README は「〜した」と断定したままだった**
 - `sensitive` モードを廃止したが、**README / forensic_report / TODO に残骸が残っていた**

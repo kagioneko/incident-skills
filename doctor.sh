@@ -38,6 +38,24 @@ for skill in incident-response incident-containment incident-cleanup; do
   else warn "$skill not installed (safe default on unverified runtimes)"; fi
 done
 [ "$AUTO_INVOCATION_CONTROL" = verified ] && ok 'automatic-invocation control verified by adapter' || warn 'automatic-invocation control UNKNOWN; privileged skills must remain opt-in'
+if [ "$RUNTIME" = codex ]; then
+  for skill in incident-containment incident-cleanup; do
+    policy="$TARGET/$skill/agents/openai.yaml"
+    if [ -f "$policy" ] && grep -q '^  allow_implicit_invocation: false$' "$policy"; then
+      ok "$skill Codex implicit invocation disabled"
+    elif [ -f "$TARGET/$skill/SKILL.md" ]; then
+      fail "$skill Codex implicit-invocation policy missing"
+    fi
+  done
+elif [ "$RUNTIME" = claude-code ]; then
+  for skill in incident-containment incident-cleanup; do
+    if [ -f "$TARGET/$skill/SKILL.md" ] && grep -q '^disable-model-invocation: true$' "$TARGET/$skill/SKILL.md"; then
+      ok "$skill Claude automatic invocation disabled"
+    elif [ -f "$TARGET/$skill/SKILL.md" ]; then
+      fail "$skill Claude automatic-invocation frontmatter missing"
+    fi
+  done
+fi
 warn 'OS read-only/ACL protection is not proven here; verify evidence/original separately'
 for tool in incident-containment/scripts/plan_tool.sh incident-cleanup/scripts/verify_delete_confirm.sh; do
   [ ! -f "$TARGET/$tool" ] || { [ -x "$TARGET/$tool" ] && ok "$tool executable" || fail "$tool not executable"; }

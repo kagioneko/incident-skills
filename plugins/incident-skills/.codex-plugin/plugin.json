@@ -1,0 +1,18 @@
+{
+  "skills": "./skills/",
+  "name": "incident-skills",
+  "description": "Incident response, containment, and cleanup workflows with explicit safety boundaries.",
+  "version": "0.1.0-beta.1",
+  "interface": {
+    "displayName": "Incident Skills",
+    "shortDescription": "Evidence-first incident response workflows for AI agents.",
+    "defaultPrompt": "Use incident-response to preserve and analyze suspected server-compromise evidence without changing the source.",
+    "developerName": "kagioneko",
+    "longDescription": "Preserve and analyze evidence, prepare reversible containment plans, and gate cleanup behind explicit machine-checked approval.",
+    "category": "Developer Tools",
+    "capabilities": []
+  },
+  "author": {
+    "name": "kagioneko"
+  }
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Incident Response"
+  short_description: "Preserve and analyze suspected compromise evidence"
+  default_prompt: "Use $incident-response to preserve and analyze suspected server-compromise evidence without modifying the source."

@@ -19,7 +19,7 @@
 | `plan_tool.sh verify` | ツール | **強制** | **強制** | **強制** | 同上 |
 | `permissions.deny` | ランタイム | 強制 | 要確認 | 要確認 | 設定形式が異なる |
 | `PreToolUse` フック | ランタイム | 強制 | 要確認 | 要確認 | 終了コード2で遮断 |
-| `disable-model-invocation` | ランタイム | 強制 | 要確認 | 要確認 | **未対応なら削除スキルが自動起動し得る** |
+| 自動起動禁止 | ランタイム | `disable-model-invocation` | **`agents/openai.yaml`で強制** | 要確認 | Codexは `policy.allow_implicit_invocation: false` |
 | `allowed-tools` | ランタイム | **強制ではない** | 要確認 | 要確認 | 「確認なしで使える」設定であり、制限ではない |
 | SKILL.md の禁止事項 | 文書 | 強制なし | 強制なし | 強制なし | モデルへの依頼。読み違えれば突破される |
 
@@ -29,7 +29,7 @@
 
 ## 未対応ランタイムで使う場合
 
-`disable-model-invocation` が効かない環境では、削除・封じ込めスキルが
+自動起動禁止が効かない環境では、削除・封じ込めスキルが
 自動起動し得る。その場合は、**ランタイムの機能に頼らず物理的に分ける。**
 
 ```
@@ -84,3 +84,24 @@ echo "exit code: $?"   # 2 なら遮断されている
 
 このスキルが `verify_delete_confirm.sh` と `plan_tool.sh` を同梱しているのは、
 **ランタイムに依存しない検証層を1枚挟むため**である。
+---
+
+## 実機検証済みランタイム
+
+### Codex CLI 0.146.0 / Windows（2026-08-02）
+
+隔離した一時 `CODEX_HOME` で以下を確認済み。
+
+- ローカルmarketplaceの登録
+- `incident-skills@incident-skills` のインストール
+- 3スキルと `agents/openai.yaml` のキャッシュ展開
+- `policy.allow_implicit_invocation: false` の構造検証
+- プラグイン一覧での有効状態
+- プラグイン削除とmarketplace削除
+- 削除後にインストール一覧とmarketplace一覧が空になること
+
+未確認なのは、モデルセッションを使った暗黙起動のブラックボックス試験。
+Codex公式仕様上は `allow_implicit_invocation: false` が暗黙起動を禁止するが、
+本リポジトリはCIでも同ポリシーの存在を検証する。
+
+Claude CodeとAntigravityは、対応設定を同梱しているが実機検証済みとは扱わない。

@@ -69,12 +69,28 @@ note "Automatic-invocation control: $AUTO_INVOCATION_CONTROL"
 [ "$INCLUDE_PRIVILEGED" = yes ] || note 'Safety: privileged skills are not installed.'
 
 for skill in $skills; do
-  src="$ROOT/$skill"; dst="$TARGET/$skill"
+  src="$ROOT/plugins/incident-skills/skills/$skill"; dst="$TARGET/$skill"
   [ -f "$src/SKILL.md" ] || die "source skill missing: $src"
   if [ -e "$dst" ] && [ "$FORCE" -ne 1 ]; then die "destination exists: $dst"; fi
   if [ -e "$dst" ] && [ ! -f "$dst/.incident-skills-managed" ]; then die "refusing unmanaged destination: $dst"; fi
   note "PLAN copy $src -> $dst"
 done
+
+apply_runtime_metadata() {
+  skill_name=$1
+  skill_dir=$2
+  if [ "$RUNTIME" = claude-code ] && [ "$skill_name" != incident-response ]; then
+    metadata_tmp="$(mktemp "${TMPDIR:-/tmp}/incident-skill-frontmatter.XXXXXX")" || die 'mktemp failed'
+    awk 'BEGIN { separators=0 }
+      /^---[[:space:]]*$/ {
+        separators++
+        if (separators == 2) print "disable-model-invocation: true"
+      }
+      { print }
+    ' "$skill_dir/SKILL.md" > "$metadata_tmp"
+    mv -- "$metadata_tmp" "$skill_dir/SKILL.md"
+  fi
+}
 
 [ "$MODE" = apply ] || { note 'DRY-RUN complete; no files changed.'; exit 0; }
 mkdir -p "$TARGET"
@@ -83,9 +99,10 @@ tmp_manifest="$(mktemp "${TMPDIR:-/tmp}/incident-skills-manifest.XXXXXX")" || di
 trap 'rm -f "$tmp_manifest"' EXIT
 printf 'schema_version\t1\nruntime\t%s\ninstalled_at_utc\t%s\n' "$RUNTIME" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$tmp_manifest"
 for skill in $skills; do
-  src="$ROOT/$skill"; dst="$TARGET/$skill"
+  src="$ROOT/plugins/incident-skills/skills/$skill"; dst="$TARGET/$skill"
   if [ -e "$dst" ]; then rm -rf -- "$dst"; fi
   cp -R -- "$src" "$dst"
+  apply_runtime_metadata "$skill" "$dst"
   : > "$dst/.incident-skills-managed"
   printf 'skill\t%s\n' "$skill" >> "$tmp_manifest"
 done

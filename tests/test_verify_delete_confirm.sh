@@ -2,7 +2,7 @@
 # verify_delete_confirm.sh の自己テスト
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
-V="$PWD/incident-cleanup/scripts/verify_delete_confirm.sh"
+V="$PWD/plugins/incident-skills/skills/incident-cleanup/scripts/verify_delete_confirm.sh"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 W="$TMP/evidence/working-copy"
 mkdir -p "$TMP/evidence/original" "$W/proj/subdir" "$W/ai_sessions"

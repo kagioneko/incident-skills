@@ -1,0 +1,7 @@
+interface:
+  display_name: "Incident Cleanup"
+  short_description: "Gate evidence cleanup behind explicit approval"
+  default_prompt: "Use $incident-cleanup to validate an explicit cleanup request after evidence preservation and analysis."
+
+policy:
+  allow_implicit_invocation: false

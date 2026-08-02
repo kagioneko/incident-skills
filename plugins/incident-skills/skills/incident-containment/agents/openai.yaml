@@ -1,0 +1,7 @@
+interface:
+  display_name: "Incident Containment"
+  short_description: "Prepare reversible approved containment actions"
+  default_prompt: "Use $incident-containment to prepare a reversible containment plan for an analyzed incident."
+
+policy:
+  allow_implicit_invocation: false

@@ -3,14 +3,13 @@ name: incident-containment
 description: >
   分析済みの所見に基づき、攻撃者の通信・セッション・認証情報を可逆的に封じ込める。
   dry-run が既定。実行は管理プレーン側を優先し、全操作をロールバック手順とともに記録する。
-disable-model-invocation: true
 ---
 
 # インシデント封じ込め（Containment）
 
 > [!CAUTION]
 > **このスキルはモデルから自動的に呼び出されない。**
-> `disable-model-invocation: true` により、ユーザーが明示的に指定した場合のみ起動する。
+> Codexでは `agents/openai.yaml`、Claude Codeではインストール時のfrontmatterにより、ユーザーが明示した場合のみ起動する。
 >
 > ネットワーク遮断・セッション終了・認証失効は、誤ると
 > **自分がロックアウトされ、証拠が失われ、正規利用者が遮断される。**
@@ -526,7 +525,7 @@ ls -l /proc/*/exe 2>/dev/null                # 実行ファイルの実体（削
 
 ### 管理プレーンから（推奨）
 
-事業者別の該当箇所は `incident-response/references/containment_matrix.md` を参照。
+事業者別の該当箇所は `../incident-response/references/containment_matrix.md` を参照。
 
 > [!IMPORTANT]
 > **必ず管理プレーンを先に案内する。**
@@ -912,7 +911,7 @@ tty
 >
 > 失効と再発行は**クリーンな端末**から。新しい鍵の配備は**新環境を構築してから**。
 
-失効対象は `incident-response/templates/credential_rotation.md` を使う。忘れられがちなもの:
+失効対象は `../incident-response/templates/credential_rotation.md` を使う。忘れられがちなもの:
 
 - **TLS証明書と対応する秘密鍵**（`certbot revoke --reason keycompromise` → 旧鍵破棄 → 再発行 → 再配備まで1セット）
 - **クラウドIAM**（アクセスキー、サービスアカウントキー、一時セッションの取消）

@@ -10,7 +10,7 @@
 
 ## ✅ P0-1【完了】: `default deny outgoing` が Tailscale を殺す【実害あり】
 
-**場所**: `incident-containment/SKILL.md` § 5 ホスト上からのLevel 2
+**場所**: `plugins/incident-skills/skills/incident-containment/SKILL.md` § 5 ホスト上からのLevel 2
 
 **問題**: outbound を全遮断すると、維持するはずの Tailscale 経路自体が死ぬ。
 既存セッションは一時的に生きても、切断後に再接続できない。
@@ -38,7 +38,7 @@ sudo ufw allow out 123/udp            # NTP（時刻ずれは証拠の信頼性�
 
 ## ✅ P0-2【完了】: `100.64.0.0/10` 丸ごとを信頼しない
 
-**場所**: `incident-containment/SKILL.md` § 3 許可リスト
+**場所**: `plugins/incident-skills/skills/incident-containment/SKILL.md` § 3 許可リスト
 
 **問題**: `100.64.0.0/10` は CGNAT 帯全体。Tailscale が使う範囲であって、
 自分の管理端末を指すものではない。
@@ -56,7 +56,7 @@ IR_TRUSTED_INTERFACE="tailscale0"              # またはインターフェー�
 
 ## ✅ P0-3【完了】: `ufw reset` はロールバックではない
 
-**場所**: `incident-containment/SKILL.md` § 5 ロールバック手順
+**場所**: `plugins/incident-skills/skills/incident-containment/SKILL.md` § 5 ロールバック手順
 
 **問題**: `ufw --force reset` は現行設定を初期化する破壊的操作。
 バックアップからのファイル復元も、ufwの状態やディストリ差異で確実とは限らない。
@@ -88,7 +88,7 @@ iptables -X IR_CONTAINMENT
 
 ## ✅ P0-4【完了】: Plan ID は正規化JSONからハッシュする
 
-**場所**: `incident-containment/SKILL.md` § 0 Plan ID
+**場所**: `plugins/incident-skills/skills/incident-containment/SKILL.md` § 0 Plan ID
 
 **問題**: 表示テキストのハッシュだと、空白・改行・日付形式・コメントで値が変わる。
 指差し確認にならない。
@@ -139,7 +139,7 @@ status                : proposed / approved / executed / invalidated
 
 ## ✅ P0-6【完了】: 鍵フィンガープリントは常には取れない
 
-**場所**: `incident-containment/SKILL.md` § 3 候補リストの出力例
+**場所**: `plugins/incident-skills/skills/incident-containment/SKILL.md` § 3 候補リストの出力例
 
 **問題**: `ss` だけでは「この接続が authorized_keys の何番目の鍵で認証されたか」は分からない。
 sshd の `LogLevel VERBOSE` で auth.log にフィンガープリントが残っていれば対応付け可能だが、
