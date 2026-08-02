@@ -78,6 +78,21 @@ DELETE-CONFIRM
 /root/ir/evidence/working-copy/vps-spirit/youtube_token.json
 ```
 
+> [!IMPORTANT]
+> ### 検証は、目視ではなくツールで行う
+>
+> ```bash
+> printf '%s\n' "$CONFIRM_TEXT" \
+>   | scripts/verify_delete_confirm.sh --working-copy /path/to/evidence/working-copy \
+>       --proposed /path/to/proposed_list.txt
+> ```
+>
+> **exit 0 のときだけ削除してよい。** 標準出力に検証済みの絶対パスが返る。
+> 1件でも失敗すると何も出力せず exit 1 になる（部分実行の防止）。
+>
+> 以下の規則は、このツールが機械的に検証する。
+> **モデルが目視で確認するのではない。**
+
 ### 検証規則（すべて満たさなければ実行しない）
 
 1. 1行目が `DELETE-CONFIRM` のみであること

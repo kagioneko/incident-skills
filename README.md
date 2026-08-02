@@ -9,6 +9,7 @@ AIエージェント（Claude Code / Antigravity 等）向けの、サーバー�
 |---|---|
 | **設計の根拠** | [`ORIGINS.md`](ORIGINS.md) — 各ルールがどの事故から生まれたか |
 | **開発中の失敗** | [`FAILURES.md`](FAILURES.md) — 8件の自損記録 |
+| **どこまで強制されるか** | [`RUNTIME_SUPPORT.md`](RUNTIME_SUPPORT.md) — ランタイム別の強制力 |
 | **経緯を書いた記事** | （note の URL をここに） |
 
 ---
@@ -55,12 +56,24 @@ incident-response/
     └── credential_rotation.md        失効/再発行/再配備の3段階チェック
 
 incident-containment/
-└── SKILL.md                          隔離・遮断・失効。Plan ID 承認必須
+├── SKILL.md                          隔離・遮断・失効。Plan ID 承認必須
+├── scripts/
+│   └── plan_tool.sh                  Plan ID の生成・封印・検証、ルール生成
+└── templates/
+    └── plan.example.json             ルール粒度の記載例
 
 incident-cleanup/
-└── SKILL.md                          削除。DELETE-CONFIRM 必須
+├── SKILL.md                          削除。DELETE-CONFIRM 必須
+├── scripts/
+│   └── verify_delete_confirm.sh      承認テキストの機械検証
+└── templates/
+    └── deletion_audit.md
+
+tests/                                自己テスト（CI から実行）
+.github/workflows/ci.yml              構文・参照・危険パターン・自己テスト
 
 ORIGINS.md                         設計原則と、その元になった事故の対応表
+RUNTIME_SUPPORT.md                 ランタイム別に「何が本当に強制されるか」の表
 FAILURES.md                        開発中に踏んだ失敗の記録（設計判断の背景）
 TODO.md                            未着手項目
 ```
@@ -81,6 +94,16 @@ Layer 3  PreToolUse フック（終了コード2で遮断）
 Layer 4  SKILL.md の判断規則               ← お願い
 Layer 5  監査ログ
 ```
+
+そして **Layer 0 と Layer 4 の間に、検証ツールを1枚挟んである。**
+
+| ツール | 何を機械検証するか |
+|---|---|
+| `verify_delete_confirm.sh` | 絶対パス / 通常ファイル / symlink / realpath / デバイス番号 / 保護対象 / 提示済み一覧 |
+| `plan_tool.sh verify` | Plan ID / 有効期限 / status / 実行スクリプトのハッシュ / 維持経路の有無 |
+
+**規則を文章で書くだけでは、モデルの読解に委ねることになる。**
+機械が検証しない規則は、規則ではなく期待である。
 
 > [!CAUTION]
 > **`allowed-tools` は制限ではない。**
@@ -122,24 +145,35 @@ evidence/
 
 ### 平時
 
-1. スキルを配置する
+1. まず dry-run で配置計画を確認する
 
 ```bash
-# Claude Code
-cp -r incident-response incident-containment incident-cleanup ~/.claude/skills/
-
-# Antigravity / その他ディレクトリ型スキル対応環境
-# 各環境のスキルディレクトリへ配置
+./install.sh
+./install.sh --runtime codex
+./install.sh --runtime codex --apply
 ```
 
-2. `hardening.md` の設定を入れる（**これが本体。SKILL.md だけでは守れない**）
-3. 収集キットの正本を手元に置く
-4. **使い捨て環境で演習する**（`scripts/rehearse_containment.sh`）
+Codex / Antigravity のように自動起動禁止の強制力が未検証のランタイムでは、
+既定で `incident-response` のみを配置する。封じ込め・削除スキルも配置する場合は、
+リスクを確認して `--include-privileged` を明示する。
+
+```bash
+./install.sh --runtime codex --include-privileged --apply
+./doctor.sh --runtime codex
+```
+
+Antigravity は既定のスキルディレクトリを断定しない。`--target /absolute/path` を指定する。
+アンインストールは `uninstall.sh --target /absolute/path` の dry-run 後、`--apply` で行う。
+
+2. `doctor.sh` の FAIL を解消し、WARNING と未検証範囲を確認する
+3. `hardening.md` の設定を入れる（**これが本体。SKILL.md だけでは守れない**）
+4. 収集キットの正本を手元に置く
+5. **使い捨て環境で演習する**（`scripts/rehearse_containment.sh`）
    ※ 本番が初回実行になってはいけない。実際、このスキルの iptables コードは
      査読3周・構文チェック済みで、初回実行時に実行者を締め出した
-5. sshd の `LogLevel VERBOSE` を設定する
+6. sshd の `LogLevel VERBOSE` を設定する
    ※ 侵害後に設定しても、過去の接続については何も分からない
-6. `/var/log/journal` が存在するか確認する
+7. `/var/log/journal` が存在するか確認する
    ※ 無ければ journald は揮発設定。再起動でログが消える
 
 ### 有事

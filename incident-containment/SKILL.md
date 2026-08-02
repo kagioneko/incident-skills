@@ -127,6 +127,30 @@ Plan ID には影響しない。
 sha256sum -c plan_bundles.sha256 || { echo "スクリプトが承認時と異なります" >&2; exit 1; }
 ```
 
+> [!IMPORTANT]
+> ### 正規化・照合はツールで行う
+>
+> ```bash
+> # Plan ID を計算
+> scripts/plan_tool.sh id plan.json
+>
+> # 実行/ロールバックスクリプトのハッシュを封入し、Plan ID を再計算
+> scripts/plan_tool.sh seal plan.json --exec apply.sh --rollback rollback.sh
+>
+> # 実行直前に検証（ID一致・期限・status・スクリプトのハッシュ・維持経路）
+> scripts/plan_tool.sh verify plan.json --plan-id <ID> \
+>     --exec apply.sh --rollback rollback.sh
+>
+> # plan.rules から iptables コマンドを生成（実行はしない）
+> scripts/plan_tool.sh rules plan.json
+> ```
+>
+> **`verify` が exit 0 を返したときだけ実行してよい。**
+> ハッシュの照合を人間や言語モデルが目視で行うのは、照合ではない。
+>
+> `rules` で生成したコマンドを使えば、**承認したプランと実行内容が構造的に一致する。**
+> 手書きすると、プランに無い許可（例: `3478/udp`）が紛れ込む。
+
 **シリアライズ規則**: キー順を辞書順に固定 / UTF-8 / 余計な空白なし / 配列順を固定
 
 ```bash

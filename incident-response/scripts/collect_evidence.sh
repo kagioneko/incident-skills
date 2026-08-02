@@ -240,7 +240,11 @@ cap "収集時刻"         "$V/collection_time.txt" date -Is
 cap "uptime"           "$V/uptime.txt"          uptime
 
 # 削除済みバイナリで動いているプロセス（マルウェアの典型）
-ls -l /proc/*/exe 2>/dev/null | grep -F '(deleted)' > "$V/deleted_binaries_running.txt" \
+for _p in /proc/[0-9]*; do
+    _t="$(readlink "$_p/exe" 2>/dev/null)" || continue
+    case "$_t" in *'(deleted)'*) printf '%s %s\n' "${_p#/proc/}" "$_t" ;; esac
+done > "$V/deleted_binaries_running.txt" 2>/dev/null
+[ -s "$V/deleted_binaries_running.txt" ] \
     || gap missing "削除済みバイナリで実行中のプロセス" "該当なし"
 
 if command -v docker >/dev/null 2>&1; then
@@ -333,7 +337,7 @@ awk -F: '$6 !~ /^(\/home|\/root|\/var|\/nonexistent|\/run)/ {print}' /etc/passwd
 cap "特権グループ" "$A/privileged_groups.txt" getent group sudo wheel adm docker
 
 # 全ユーザーのホーム
-while IFS=: read -r user _ uid _ _ home _; do
+while IFS=: read -r user _ _ _ _ home _; do
     [ -d "$home" ] || continue
     case "$home" in /|/nonexistent|/dev/null|/run/*) continue;; esac
     dst="$A/users/$user"
@@ -380,7 +384,7 @@ grep -n -A20 '^Match' /etc/ssh/sshd_config > "$A/sshd_match_blocks.txt" 2>/dev/n
 log "[5/8] AIエージェントのセッションログ"
 S="$EVIDENCE_DIR/ai_sessions"
 
-while IFS=: read -r user _ uid _ _ home _; do
+while IFS=: read -r user _ _ _ _ home _; do
     [ -d "$home" ] || continue
     case "$home" in /|/nonexistent|/dev/null|/run/*) continue;; esac
     # エージェントごとにディレクトリを分ける。

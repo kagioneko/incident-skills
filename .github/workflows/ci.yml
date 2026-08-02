@@ -1,0 +1,166 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: sudo apt-get update && sudo apt-get install -y shellcheck jq
+
+      # -------------------------------------------------
+      - name: Shell syntax (bash -n)
+        run: |
+          fail=0
+          while IFS= read -r f; do
+            bash -n "$f" || { echo "::error file=$f::syntax error"; fail=1; }
+          done < <(find . -name '*.sh')
+          exit $fail
+
+      - name: ShellCheck
+        run: |
+          fail=0
+          while IFS= read -r f; do
+            shellcheck -S warning "$f" || fail=1
+          done < <(find . -name '*.sh')
+          exit $fail
+
+      # -------------------------------------------------
+      - name: Embedded bash blocks in Markdown
+        run: |
+          python3 - <<'PY'
+          import re, pathlib, subprocess, tempfile, os, sys
+          bad = total = 0
+          for f in pathlib.Path('.').rglob('*.md'):
+              for i, b in enumerate(re.findall(r'```bash\n(.*?)```', f.read_text(), re.S)):
+                  if b.strip().startswith('>') or len(b.strip().splitlines()) < 3:
+                      continue
+                  total += 1
+                  tf = tempfile.NamedTemporaryFile('w', suffix='.sh', delete=False)
+                  tf.write(b); tf.close()
+                  r = subprocess.run(['bash', '-n', tf.name], capture_output=True, text=True)
+                  if r.returncode:
+                      bad += 1
+                      print(f"::error file={f}::bash block {i+1}: {r.stderr.strip()[:200]}")
+                  os.unlink(tf.name)
+          print(f"checked {total} blocks, {bad} failed")
+          sys.exit(1 if bad else 0)
+          PY
+
+      - name: Markdown references
+        run: |
+          python3 - <<'PY'
+          import re, pathlib, sys
+          files = {str(p) for p in pathlib.Path('.').rglob('*') if p.is_file()}
+          bad = 0
+          for f in pathlib.Path('.').rglob('*.md'):
+              t = f.read_text()
+              for m in re.findall(r'`([A-Za-z0-9_\-/]+\.(?:md|sh|json))`', t):
+                  # リポジトリ内のファイルを指さない言及は除外する
+                  #   - ユーザー側の作業ディレクトリ (evidence/ , hooks/)
+                  #   - 実行時に生成されるファイル (rollback*.sh)
+                  #   - 外部ツールの設定ファイル名への言及 (settings.json 等)
+                  EXCLUDE = ('evidence/', 'hooks/', 'settings.json',
+                             'settings.local.json', 'config.toml',
+                             '.claude.json', '.mcp.json', 'daemon.json',
+                             'auth.json', 'credentials.json', 'token.json',
+                             'plan.json', 'confirm.txt')
+                  if any(x in m for x in EXCLUDE) or m.startswith('rollback'):
+                      continue
+                  if not [c for c in files if c.endswith(m.lstrip('./'))]:
+                      print(f"::error file={f}::missing reference {m}"); bad += 1
+              for m in re.findall(r'\]\(([A-Za-z0-9_\-/.]+\.md)\)', t):
+                  if not [c for c in files if c.endswith(m)]:
+                      print(f"::error file={f}::broken link {m}"); bad += 1
+          print(f"{bad} broken references")
+          sys.exit(1 if bad else 0)
+          PY
+
+      - name: SKILL.md frontmatter
+        run: |
+          python3 - <<'PY'
+          import re, pathlib, sys
+          bad = 0
+          need_disable = {'incident-containment', 'incident-cleanup'}
+          for f in pathlib.Path('.').rglob('SKILL.md'):
+              t = f.read_text()
+              m = re.match(r'^---\n(.*?)\n---\n', t, re.S)
+              if not m:
+                  print(f"::error file={f}::no YAML frontmatter"); bad += 1; continue
+              fm = m.group(1)
+              for k in ('name:', 'description:'):
+                  if k not in fm:
+                      print(f"::error file={f}::missing {k}"); bad += 1
+              skill = f.parent.name
+              if skill in need_disable and 'disable-model-invocation: true' not in fm:
+                  print(f"::error file={f}::{skill} must set disable-model-invocation: true")
+                  bad += 1
+              if skill == 'incident-response' and 'disable-model-invocation' in fm:
+                  print(f"::error file={f}::incident-response must remain auto-invocable")
+                  bad += 1
+          sys.exit(1 if bad else 0)
+          PY
+
+      # -------------------------------------------------
+      - name: Executable bits
+        run: |
+          fail=0
+          while IFS= read -r f; do
+            [ -x "$f" ] || { echo "::error file=$f::not executable (chmod 755)"; fail=1; }
+          done < <(find . -name '*.sh')
+          exit $fail
+
+      - name: Dangerous patterns
+        run: |
+          fail=0
+          # 隔離コードで単一チェーンを両方向から呼んでいないか
+          if grep -rn '^iptables -A IR_CONTAINMENT ' --include='*.md' --include='*.sh' .; then
+            echo "::error::shared IR_CONTAINMENT chain detected (must be _IN/_OUT/_FWD)"; fail=1
+          fi
+          # ロールバックとして ufw reset を提示していないか
+          if grep -rn '^\s*sudo\? \?ufw --force reset' --include='*.md' .; then
+            echo "::error::ufw --force reset used as rollback"; fail=1
+          fi
+          # マニフェスト除外が -name になっていないか
+          if grep -rn "! -name 'MANIFEST.sha256'" --include='*.sh' --include='*.md' .; then
+            echo "::error::manifest exclusion must use ! -path './MANIFEST.sha256'"; fail=1
+          fi
+          # 廃止したモードが復活していないか
+          if grep -rn 'collect_evidence.sh sensitive' --include='*.md' . | grep -v '廃止'; then
+            echo "::error::sensitive mode was removed in v3.2"; fail=1
+          fi
+          exit $fail
+
+      # -------------------------------------------------
+      - name: Plan tool self-test
+        run: bash tests/test_plan_tool.sh
+
+      - name: DELETE-CONFIRM validator self-test
+        run: bash tests/test_verify_delete_confirm.sh
+
+      - name: Installer and doctor self-test
+        run: bash tests/test_installer.sh
+
+      - name: collect_evidence smoke test
+        run: |
+          export IR_EVIDENCE_BASE=$(mktemp -d)
+          bash incident-response/scripts/collect_evidence.sh quick > /dev/null
+          cd "$IR_EVIDENCE_BASE"
+          mkdir x && tar xzf *.tar.gz -C x
+          cd x/*/ && sha256sum -c MANIFEST.sha256 --quiet
+          echo "manifest verified"
+
+      - name: Secret material must not be collected
+        run: |
+          export IR_EVIDENCE_BASE=$(mktemp -d)
+          bash incident-response/scripts/collect_evidence.sh quick > /dev/null
+          if tar tzf "$IR_EVIDENCE_BASE"/*.tar.gz \
+             | grep -E 'auth/shadow$|auth/gshadow$|ssh_full|credentials\.json$'; then
+            echo "::error::secret file bodies were collected"; exit 1
+          fi
+          echo "no secret bodies collected"

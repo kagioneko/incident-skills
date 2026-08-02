@@ -101,7 +101,7 @@
 |---|---|
 | `~/.claude/projects/*.jsonl` | **エージェントが実行したコマンドが分からない** |
 | `~/.codex/` `~/.gemini/` 等 | 同上 |
-| `settings.json` の deny / allowedTools | 何が許可されていたかが分からない |
+| エージェント設定（`settings.json` 等）の deny / allowedTools | 何が許可されていたかが分からない |
 
 > [!IMPORTANT]
 > **これが実行者の特定に決定的になることがある。**
