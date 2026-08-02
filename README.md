@@ -18,7 +18,7 @@ AIエージェント（Claude Code / Antigravity 等）向けの、サーバー�
 | **設計の根拠** | [`ORIGINS.md`](ORIGINS.md) — 各ルールがどの事故から生まれたか |
 | **開発中の失敗** | [`FAILURES.md`](FAILURES.md) — 8件の自損記録 |
 | **どこまで強制されるか** | [`RUNTIME_SUPPORT.md`](RUNTIME_SUPPORT.md) — ランタイム別の強制力 |
-| **経緯を書いた記事** | （note の URL をここに） |
+| **経緯を書いた記事** | [証拠を消したのも、復元したのも、同じAIだった](https://note.com/emilia_lab/n/ndd0e89002870) |
 
 ---
 
