@@ -137,13 +137,13 @@ status                : proposed / approved / executed / invalidated
 
 ---
 
-## ✅ P0-6【完了】: 鍵フィンガープリントは常には取れない
+## ✅ P0-6【訂正済み】: 鍵フィンガープリントはログで確認する
 
 **場所**: `plugins/incident-skills/skills/incident-containment/SKILL.md` § 3 候補リストの出力例
 
 **問題**: `ss` だけでは「この接続が authorized_keys の何番目の鍵で認証されたか」は分からない。
-sshd の `LogLevel VERBOSE` で auth.log にフィンガープリントが残っていれば対応付け可能だが、
-常に取れるとは限らない。
+OpenSSH 6.3 以降は通常 `LogLevel INFO` でも成功した公開鍵認証のフィンガープリントを記録するが、
+ログ未保全、古い OpenSSH、ログ形式や出力先の違いにより常に取れるとは限らない。
 
 **修正**: 出力を2種類に分ける。**推測で対応付けない。**
 
@@ -151,7 +151,7 @@ sshd の `LogLevel VERBOSE` で auth.log にフィンガープリントが残っ
 鍵フィンガープリント: SHA256:xY3k...  （auth.log から確認済み）
 ```
 ```
-鍵フィンガープリント: 判定不能（auth.log に記録なし / LogLevel が INFO）
+鍵フィンガープリント: 判定不能（認証ログに該当エントリなし）
 ```
 
 ---

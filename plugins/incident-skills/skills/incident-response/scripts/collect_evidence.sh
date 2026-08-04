@@ -370,9 +370,6 @@ cap "sshd実効設定" "$A/sshd_effective_full.txt" sshd -T
 if [ -s "$A/sshd_effective_full.txt" ]; then
     grep -Ei 'authorizedkeysfile|authorizedkeyscommand|permitrootlogin|passwordauthentication|loglevel' \
         "$A/sshd_effective_full.txt" > "$A/sshd_effective_authkeys.txt" 2>/dev/null
-    grep -qi 'loglevel verbose' "$A/sshd_effective_full.txt" \
-        || gap missing "sshd LogLevel VERBOSE" \
-               "auth.log に鍵フィンガープリントが記録されていない可能性（実行者の対応付けが困難）"
 fi
 grep -n -A20 '^Match' /etc/ssh/sshd_config > "$A/sshd_match_blocks.txt" 2>/dev/null || true
 

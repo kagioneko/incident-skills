@@ -452,8 +452,9 @@ echo "${SSH_CONNECTION##* }"      # 現在の接続が使っているサーバ�
 
 > [!CAUTION]
 > **`ss` や `ps` だけでは「この接続がどの鍵で認証されたか」は分からない。**
-> 対応付けができるのは、sshd の `LogLevel` が `VERBOSE` 以上で、
-> auth.log にフィンガープリントが記録されている場合のみ。
+> OpenSSH 6.3 以降は通常、成功した公開鍵認証のフィンガープリントを
+> `LogLevel INFO` でも記録する。対応付けは、認証ログに実際の記録がある場合に限る。
+> 古い OpenSSH、ログ未保全、ログ形式・出力先の違いも考慮する。
 >
 > **取得できなければ「判定不能」と書く。推測で対応付けない。**
 
@@ -465,7 +466,8 @@ grep -E 'Accepted (publickey|password)' /var/log/auth.log | tail -50
 #   Accepted publickey for nekosan from 203.0.113.10 port 51234 ssh2:
 #     ED25519 SHA256:xY3k...
 
-# sshd の現在のログレベル
+# バージョン、現在のログレベル、ログ出力先も記録
+sshd -V 2>&1 || true
 sshd -T | grep -i loglevel
 ```
 
@@ -475,13 +477,13 @@ sshd -T | grep -i loglevel
 鍵FP: SHA256:xY3k...  （auth.log から確認済み、2026-08-01T05:02:11 のエントリ）
 ```
 ```
-鍵FP: 判定不能（auth.log に該当エントリなし / LogLevel=INFO のため未記録）
+鍵FP: 判定不能（認証ログに該当エントリなし）
 ```
 
 > [!NOTE]
-> `LogLevel VERBOSE` は平時に設定しておくべき項目。
-> 侵害後に設定しても、過去の接続については何も分からない。
-> **これも「チェックリストに載っていないから設定されない」項目のひとつ。**
+> OpenSSH 6.2 以前では、成功した公開鍵認証の FP を得るために
+> `LogLevel VERBOSE` が必要だった。6.3 以降へその要件を持ち込まない。
+> 平時に、実際の認証ログと永続化を確認する。侵害後に設定を変えても過去のログは戻らない。
 
 ---
 
